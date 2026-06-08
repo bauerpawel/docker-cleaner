@@ -9,8 +9,15 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
+# Zaciągnij łatki bezpieczeństwa pakietów bazowych Debiana.
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Aktualne pip/setuptools/wheel (usuwa CVE w samym pip) + zależności aplikacji.
+RUN python -m pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
 
