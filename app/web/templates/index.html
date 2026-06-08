@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Docker Cleaner</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🧹</span>
+      <h1>Docker Cleaner</h1>
+    </div>
+    <div id="status" class="status"></div>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="card-head">
+        <h2>Nieużywane obrazy</h2>
+        <div class="controls">
+          <label class="scope">
+            Zakres:
+            <select id="scope">
+              <option value="dangling">dangling (nieotagowane)</option>
+              <option value="all">wszystkie nieużywane</option>
+            </select>
+          </label>
+          <button id="refresh" class="btn">Odśwież</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="images-table">
+          <thead>
+            <tr>
+              <th class="col-check"><input type="checkbox" id="select-all" title="Zaznacz wszystko"></th>
+              <th>Tagi</th>
+              <th>ID</th>
+              <th class="num">Rozmiar</th>
+              <th class="num">Wiek</th>
+            </tr>
+          </thead>
+          <tbody id="images-body">
+            <tr><td colspan="5" class="empty">Ładowanie…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card-foot">
+        <span id="selection-info" class="muted">Zaznaczono: 0</span>
+        <button id="delete-selected" class="btn danger" disabled>Usuń zaznaczone</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Automatyczne czyszczenie</h2></div>
+      <form id="settings-form" class="settings">
+        <label class="switch-row">
+          <input type="checkbox" id="auto_clean">
+          <span>Włącz automatyczne czyszczenie</span>
+        </label>
+
+        <div class="grid">
+          <label>Zakres czyszczenia
+            <select id="set-scope">
+              <option value="dangling">dangling (nieotagowane)</option>
+              <option value="all">wszystkie nieużywane</option>
+            </select>
+          </label>
+
+          <label>Typ harmonogramu
+            <select id="schedule-type">
+              <option value="interval">interwał</option>
+              <option value="cron">cron</option>
+            </select>
+          </label>
+
+          <label id="interval-field">Interwał (np. 24h, 30m, 7d)
+            <input type="text" id="clean_interval" placeholder="24h">
+          </label>
+
+          <label id="cron-field" class="hidden">Wyrażenie cron (np. 0 3 * * *)
+            <input type="text" id="clean_cron" placeholder="0 3 * * *">
+          </label>
+
+          <label>Próg wieku (usuwaj starsze niż)
+            <input type="text" id="min_age" placeholder="168h">
+          </label>
+
+          <label class="switch-row inline">
+            <input type="checkbox" id="clean_build_cache">
+            <span>Czyść też build cache</span>
+          </label>
+        </div>
+
+        <div class="card-foot">
+          <span id="settings-msg" class="muted"></span>
+          <button type="submit" class="btn primary">Zapisz ustawienia</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

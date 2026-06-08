@@ -1,0 +1,44 @@
+# Dwa przykładowe sposoby uruchomienia tego samego obrazu.
+# Uruchom wybrany profil, np.:
+#   docker compose --profile web up --build
+#   docker compose --profile console up --build
+
+services:
+  cleaner-web:
+    profiles: ["web"]
+    build: .
+    image: docker-cleaner:latest
+    container_name: docker-cleaner-web
+    environment:
+      MODE: web
+      WEB_PORT: "8080"
+      CLEAN_SCOPE: dangling
+      MIN_AGE: 168h
+      # Odkomentuj, aby włączyć logowanie do panelu:
+      # WEB_AUTH_USER: admin
+      # WEB_AUTH_PASSWORD: zmien-mnie
+    ports:
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data:/data
+    restart: unless-stopped
+
+  cleaner-console:
+    profiles: ["console"]
+    build: .
+    image: docker-cleaner:latest
+    container_name: docker-cleaner-console
+    environment:
+      MODE: console
+      CLEAN_SCOPE: dangling
+      CLEAN_INTERVAL: 24h
+      MIN_AGE: 168h
+      CLEAN_BUILD_CACHE: "false"
+      # Alternatywnie zamiast interwału użyj crona (ma pierwszeństwo):
+      # CLEAN_CRON: "0 3 * * *"
+      TZ: Europe/Warsaw
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data:/data
+    restart: unless-stopped

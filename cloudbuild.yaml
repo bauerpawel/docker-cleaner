@@ -1,0 +1,39 @@
+# Build obrazu w Google Cloud Build i push do Docker Hub.
+# Uruchomienie:
+#   gcloud builds submit --config cloudbuild.yaml \
+#     --substitutions=_IMAGE=docker.io/pawol87/docker-cleaner,_TAG=1.0.0,_DOCKERHUB_USER=pawol87 .
+#
+# Wymaga sekretu 'dockerhub-token' w Secret Manager (instrukcja w README/odpowiedzi).
+
+steps:
+  # 1. Logowanie do Docker Hub (hasło/token z Secret Managera).
+  - name: 'gcr.io/cloud-builders/docker'
+    id: login
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - 'echo "$$DOCKERHUB_TOKEN" | docker login -u "$_DOCKERHUB_USER" --password-stdin'
+    secretEnv: ['DOCKERHUB_TOKEN']
+
+  # 2. Build obrazu z dwoma tagami: konkretna wersja + latest.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: build
+    args: ['build', '-t', '${_IMAGE}:${_TAG}', '-t', '${_IMAGE}:latest', '.']
+
+  # 3. Push obu tagów.
+  - name: 'gcr.io/cloud-builders/docker'
+    id: push
+    args: ['push', '--all-tags', '${_IMAGE}']
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/$PROJECT_ID/secrets/dockerhub-token/versions/latest
+      env: 'DOCKERHUB_TOKEN'
+
+substitutions:
+  _IMAGE: 'docker.io/pawol87/docker-cleaner'
+  _TAG: '1.0.0'
+  _DOCKERHUB_USER: 'pawol87'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
