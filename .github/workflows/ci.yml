@@ -40,7 +40,6 @@ jobs:
           version: "lab:latest"
           driver: cloud
           endpoint: "pbauer/docker-cleaner"
-          install: true
 
       - name: Generate image metadata
         id: meta
