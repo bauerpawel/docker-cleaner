@@ -1,13 +1,15 @@
 # Docker Cleaner 🧹
 
-Narzędziowy obraz Dockera, który czyści **nieużywane obrazy**. Działa w dwóch trybach przełączanych zmienną `MODE`:
+> **English** · [Polski](README.pl.md)
 
-- **`web`** — panel WWW z listą nieużywanych obrazów, ręcznym zaznaczaniem/usuwaniem oraz konfiguracją automatycznego czyszczenia wg harmonogramu.
-- **`console`** — bez panelu; demon, który cyklicznie czyści obrazy wg interwału lub crona.
+A Docker utility image that removes **unused Docker images**. It runs in two modes, switched with the `MODE` variable:
 
-## Szybki start
+- **`web`** — a web panel listing unused images, with manual select/delete and configuration of scheduled automatic cleanup.
+- **`console`** — no panel; a daemon that periodically cleans images on an interval or cron schedule.
 
-### Panel WWW
+## Quick start
+
+### Web panel
 
 ```bash
 docker build -t docker-cleaner .
@@ -19,11 +21,11 @@ docker run -d --name docker-cleaner \
   docker-cleaner
 ```
 
-Otwórz <http://localhost:8080>.
+Open <http://localhost:8080>.
 
-> **Windows / Docker Desktop (kontenery Linux):** ścieżkę socketu podaj jako `-v //var/run/docker.sock:/var/run/docker.sock` (podwójny ukośnik) i użyj `${PWD}` zamiast `$(pwd)` w PowerShell.
+> **Windows / Docker Desktop (Linux containers):** pass the socket path as `-v //var/run/docker.sock:/var/run/docker.sock` (double slash) and use `${PWD}` instead of `$(pwd)` in PowerShell.
 
-### Tryb konsolowy
+### Console mode
 
 ```bash
 docker run -d --name docker-cleaner-console \
@@ -35,55 +37,55 @@ docker run -d --name docker-cleaner-console \
   docker-cleaner
 ```
 
-Albo przez `docker compose`:
+Or via `docker compose`:
 
 ```bash
 docker compose --profile web up --build        # panel
-docker compose --profile console up --build     # tryb konsolowy
+docker compose --profile console up --build     # console mode
 ```
 
-## Konfiguracja (zmienne środowiskowe)
+## Configuration (environment variables)
 
-| Zmienna | Domyślnie | Opis |
+| Variable | Default | Description |
 |---|---|---|
-| `MODE` | `web` | `web` (panel) lub `console` (demon) |
-| `WEB_PORT` | `8080` | port panelu WWW |
-| `WEB_AUTH_USER` / `WEB_AUTH_PASSWORD` | — | ustaw **oba**, aby włączyć Basic Auth w panelu |
-| `CLEAN_SCOPE` | `dangling` | `dangling` (nieotagowane `<none>`) lub `all` (każdy obraz bez kontenera, jak `docker image prune -a`) |
-| `CLEAN_BUILD_CACHE` | `false` | czyść też build cache (`docker builder prune`) |
-| `MIN_AGE` | `168h` | usuwaj tylko obrazy **starsze** niż próg (chroni świeżo zbudowane); `0h` = bez progu |
-| `AUTO_CLEAN` | `false` (web) / `true` (console) | włącza harmonogram |
-| `CLEAN_INTERVAL` | `24h` | interwał czyszczenia, gdy brak crona (`30m`, `24h`, `7d`, `90s`) |
-| `CLEAN_CRON` | — | wyrażenie cron (np. `0 3 * * *`); **ma pierwszeństwo** przed interwałem |
-| `DATA_DIR` | `/data` | katalog na `settings.json` i `cleanup.log` (zamontuj jako wolumen, aby ustawienia przetrwały restart) |
-| `TZ` | `UTC` | strefa czasu dla crona (np. `Europe/Warsaw`) |
+| `MODE` | `web` | `web` (panel) or `console` (daemon) |
+| `WEB_PORT` | `8080` | web panel port |
+| `WEB_AUTH_USER` / `WEB_AUTH_PASSWORD` | — | set **both** to enable Basic Auth on the panel |
+| `CLEAN_SCOPE` | `dangling` | `dangling` (untagged `<none>`) or `all` (any image with no container, like `docker image prune -a`) |
+| `CLEAN_BUILD_CACHE` | `false` | also prune build cache (`docker builder prune`) |
+| `MIN_AGE` | `168h` | only remove images **older** than this threshold (protects freshly built ones); `0h` = no threshold |
+| `AUTO_CLEAN` | `false` (web) / `true` (console) | enables the scheduler |
+| `CLEAN_INTERVAL` | `24h` | cleanup interval when no cron is set (`30m`, `24h`, `7d`, `90s`) |
+| `CLEAN_CRON` | — | cron expression (e.g. `0 3 * * *`); **takes precedence** over the interval |
+| `DATA_DIR` | `/data` | directory for `settings.json` and `cleanup.log` (mount as a volume so settings survive restarts) |
+| `TZ` | `UTC` | time zone for cron (e.g. `Europe/Warsaw`) |
 
-W trybie **web** ustawienia zmienione w panelu zapisują się do `DATA_DIR/settings.json` i nadpisują zmienne środowiskowe po restarcie.
+In **web** mode, settings changed in the panel are saved to `DATA_DIR/settings.json` and override the environment variables after a restart.
 
-## Definicja „nieużywany"
+## What "unused" means
 
-- **`dangling`** — obrazy bez tagów (`<none>:<none>`), zwykle warstwy po przebudowach.
-- **`all`** — wszystkie obrazy, do których nie odwołuje się żaden kontener (działający ani zatrzymany).
+- **`dangling`** — images without tags (`<none>:<none>`), typically leftover layers from rebuilds.
+- **`all`** — every image not referenced by any container (running or stopped).
 
-Wybór jest dostępny zarówno w panelu, jak i przez `CLEAN_SCOPE`.
+The choice is available both in the panel and via `CLEAN_SCOPE`.
 
-## API panelu
+## Panel API
 
-| Metoda | Ścieżka | Opis |
+| Method | Path | Description |
 |---|---|---|
-| `GET` | `/` | panel HTML |
-| `GET` | `/api/images?scope=dangling\|all` | lista nieużywanych obrazów |
+| `GET` | `/` | HTML panel |
+| `GET` | `/api/images?scope=dangling\|all` | list of unused images |
 | `POST` | `/api/images/delete` | `{"ids": [...], "force": false}` |
-| `POST` | `/api/clean/run` | uruchom czyszczenie teraz wg ustawień |
-| `GET` / `PUT` | `/api/settings` | odczyt / zapis ustawień auto-czyszczenia |
-| `GET` | `/api/status` | stan, następne uruchomienie, miejsce do odzyskania |
+| `POST` | `/api/clean/run` | run cleanup now using current settings |
+| `GET` / `PUT` | `/api/settings` | read / write auto-cleanup settings |
+| `GET` | `/api/status` | status, next run, reclaimable space |
 | `GET` | `/healthz` | health check |
 
-## Bezpieczeństwo
+## Security
 
-Kontener potrzebuje dostępu do socketu Dockera (`/var/run/docker.sock`), co jest równoważne dostępowi roota na hoście — uruchamiaj go tylko w zaufanym środowisku. Panel domyślnie jest otwarty; w sieci współdzielonej włącz Basic Auth (`WEB_AUTH_USER` + `WEB_AUTH_PASSWORD`). Zabezpieczenia przed przypadkowym usunięciem: próg wieku (`MIN_AGE`), ręczne potwierdzenie usunięcia w panelu oraz log operacji w `DATA_DIR/cleanup.log`.
+The container needs access to the Docker socket (`/var/run/docker.sock`), which is equivalent to root access on the host — run it only in a trusted environment. The panel is open by default; on a shared network enable Basic Auth (`WEB_AUTH_USER` + `WEB_AUTH_PASSWORD`). Guards against accidental deletion: the age threshold (`MIN_AGE`), manual delete confirmation in the panel, and an operation log in `DATA_DIR/cleanup.log`.
 
-## Rozwój
+## Development
 
 ```bash
 pip install -r requirements-dev.txt
