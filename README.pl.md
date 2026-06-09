@@ -11,6 +11,12 @@ Narzędziowy obraz Dockera, który czyści **nieużywane obrazy**. Działa w dw�
 
 Obraz jest opublikowany jako [`pbauer/docker-cleaner`](https://hub.docker.com/r/pbauer/docker-cleaner) (multi-arch: `linux/amd64` + `linux/arm64`) — pobierasz i uruchamiasz od razu, bez budowania.
 
+Najszybciej dołączonym, gotowym plikiem [`docker-compose.hub.yml`](docker-compose.hub.yml):
+
+```bash
+docker compose -f docker-compose.hub.yml up -d
+```
+
 ### Panel WWW
 
 ```bash

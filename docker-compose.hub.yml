@@ -1,0 +1,41 @@
+# Gotowy do uruchomienia z obrazem z Docker Hub (bez budowania):
+#   docker compose -f docker-compose.hub.yml up -d
+# Panel: http://localhost:8080
+#
+# Tryb konsolowy (demon bez panelu) zamiast panelu: ustaw MODE: console,
+# odkomentuj zmienne CLEAN_* poniżej i usuń sekcję "ports".
+#
+# Windows / Docker Desktop: socket podaj jako //var/run/docker.sock:/var/run/docker.sock
+
+services:
+  docker-cleaner:
+    image: pbauer/docker-cleaner:latest
+    container_name: docker-cleaner
+    environment:
+      MODE: web                        # web (panel) | console (demon)
+
+      # --- Logowanie do panelu (opcjonalne) ---
+      # WEB_AUTH_ENABLED: "true"
+      # WEB_AUTH_USER: admin
+      # WEB_AUTH_PASSWORD: zmien-mnie
+
+      # --- Automatyczne czyszczenie (opcjonalne; w trybie web można też włączyć w panelu) ---
+      # AUTO_CLEAN: "true"             # wymagane w trybie console (tam domyślnie włączone)
+      # Czas czyszczenia: interwał…
+      # CLEAN_INTERVAL: 24h            # 30m | 24h | 7d | 90s
+      # …albo cron (ma pierwszeństwo nad interwałem):
+      # CLEAN_CRON: "0 3 * * *"        # codziennie o 03:00
+      # TZ: Europe/Warsaw
+      # Co czyścić:
+      # CLEAN_SCOPE: all               # dangling | all
+      # CLEAN_BUILD_CACHE: "true"      # czyść też build cache
+      # MIN_AGE: 168h                  # usuwaj tylko obrazy starsze niż próg
+    ports:
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - cleaner-data:/data
+    restart: unless-stopped
+
+volumes:
+  cleaner-data:

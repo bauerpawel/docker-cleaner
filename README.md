@@ -11,6 +11,12 @@ A Docker utility image that removes **unused Docker images**. It runs in two mod
 
 The image is published at [`pbauer/docker-cleaner`](https://hub.docker.com/r/pbauer/docker-cleaner) (multi-arch: `linux/amd64` + `linux/arm64`) — pull and run it directly, no build needed.
 
+The fastest way is the included ready-to-run [`docker-compose.hub.yml`](docker-compose.hub.yml):
+
+```bash
+docker compose -f docker-compose.hub.yml up -d
+```
+
 ### Web panel
 
 ```bash
