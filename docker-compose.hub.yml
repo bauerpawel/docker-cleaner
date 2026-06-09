@@ -1,35 +1,35 @@
-# Gotowy do uruchomienia z obrazem z Docker Hub (bez budowania):
+# Ready to run with the published Docker Hub image (no build required):
 #   docker compose -f docker-compose.hub.yml up -d
 # Panel: http://localhost:8080
 #
-# Tryb konsolowy (demon bez panelu) zamiast panelu: ustaw MODE: console,
-# odkomentuj zmienne CLEAN_* poniżej i usuń sekcję "ports".
+# Console mode (daemon, no panel) instead of the panel: set MODE: console,
+# uncomment the CLEAN_* variables below and remove the "ports" section.
 #
-# Windows / Docker Desktop: socket podaj jako //var/run/docker.sock:/var/run/docker.sock
+# Windows / Docker Desktop: pass the socket as //var/run/docker.sock:/var/run/docker.sock
 
 services:
   docker-cleaner:
     image: pbauer/docker-cleaner:latest
     container_name: docker-cleaner
     environment:
-      MODE: web                        # web (panel) | console (demon)
+      MODE: web                        # web (panel) | console (daemon)
 
-      # --- Logowanie do panelu (opcjonalne) ---
+      # --- Panel login (optional) ---
       # WEB_AUTH_ENABLED: "true"
       # WEB_AUTH_USER: admin
-      # WEB_AUTH_PASSWORD: zmien-mnie
+      # WEB_AUTH_PASSWORD: change-me
 
-      # --- Automatyczne czyszczenie (opcjonalne; w trybie web można też włączyć w panelu) ---
-      # AUTO_CLEAN: "true"             # wymagane w trybie console (tam domyślnie włączone)
-      # Czas czyszczenia: interwał…
+      # --- Automatic cleanup (optional; in web mode you can also enable it in the panel) ---
+      # AUTO_CLEAN: "true"             # required in console mode (on by default there)
+      # Cleaning time: interval…
       # CLEAN_INTERVAL: 24h            # 30m | 24h | 7d | 90s
-      # …albo cron (ma pierwszeństwo nad interwałem):
-      # CLEAN_CRON: "0 3 * * *"        # codziennie o 03:00
+      # …or cron (takes precedence over the interval):
+      # CLEAN_CRON: "0 3 * * *"        # daily at 03:00
       # TZ: Europe/Warsaw
-      # Co czyścić:
+      # What to clean:
       # CLEAN_SCOPE: all               # dangling | all
-      # CLEAN_BUILD_CACHE: "true"      # czyść też build cache
-      # MIN_AGE: 168h                  # usuwaj tylko obrazy starsze niż próg
+      # CLEAN_BUILD_CACHE: "true"      # also prune the build cache
+      # MIN_AGE: 168h                  # only remove images older than this
     ports:
       - "8080:8080"
     volumes:
