@@ -134,3 +134,17 @@ def test_basic_auth_required_when_configured(tmp_path):
 
         res = client.get("/api/images", auth=("admin", "wrong"))
         assert res.status_code == 401
+
+
+def test_auth_disabled_via_toggle_even_with_credentials(tmp_path):
+    client, _fake, _rt = build_client(
+        tmp_path,
+        settings_kwargs={
+            "web_auth_enabled": False,
+            "web_auth_user": "admin",
+            "web_auth_password": "secret",
+        },
+    )
+    with client:
+        res = client.get("/api/images")
+    assert res.status_code == 200  # otwarte mimo podanych danych

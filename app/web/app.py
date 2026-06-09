@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import secrets
+import sys
 from contextlib import asynccontextmanager
 from typing import List, Literal, Optional
 
@@ -190,6 +191,13 @@ def create_app(settings, runtime: RuntimeConfig, docker_client=None) -> FastAPI:
 
 
 def run_web(settings, runtime: RuntimeConfig) -> None:
+    if settings.auth_misconfigured:
+        logger.error(
+            "WEB_AUTH_ENABLED=true, ale brakuje WEB_AUTH_USER/WEB_AUTH_PASSWORD — "
+            "panel byłby otwarty mimo żądania logowania. Ustaw login i hasło."
+        )
+        sys.exit(2)
+
     app = create_app(settings, runtime)
     logger.info(
         "Panel WWW na porcie %d (auth=%s, auto_clean=%s)",

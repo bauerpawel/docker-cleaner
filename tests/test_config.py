@@ -85,3 +85,33 @@ def test_validate_runtime_rejects_bad_cron():
 def test_validate_runtime_rejects_bad_interval():
     config = RuntimeConfig(clean_interval="soon")
     assert validate_runtime(config) is not None
+
+
+# --- logowanie do panelu (WEB_AUTH_ENABLED) ---------------------------------
+
+def test_auth_auto_enabled_when_credentials_present():
+    s = Settings(mode="web", web_auth_user="a", web_auth_password="b", data_dir="/tmp/x")
+    assert s.auth_enabled is True
+    assert s.auth_misconfigured is False
+
+
+def test_auth_off_when_no_credentials_and_no_toggle():
+    s = Settings(mode="web", data_dir="/tmp/x")
+    assert s.auth_required is False
+    assert s.auth_enabled is False
+
+
+def test_toggle_false_overrides_credentials():
+    s = Settings(
+        mode="web", web_auth_enabled=False,
+        web_auth_user="a", web_auth_password="b", data_dir="/tmp/x",
+    )
+    assert s.auth_required is False
+    assert s.auth_enabled is False
+
+
+def test_toggle_true_without_credentials_is_misconfigured():
+    s = Settings(mode="web", web_auth_enabled=True, data_dir="/tmp/x")
+    assert s.auth_required is True
+    assert s.auth_enabled is False
+    assert s.auth_misconfigured is True

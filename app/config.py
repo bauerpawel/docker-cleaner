@@ -44,6 +44,7 @@ class Settings(BaseSettings):
 
     mode: str = "web"
     web_port: int = 8080
+    web_auth_enabled: Optional[bool] = None
     web_auth_user: Optional[str] = None
     web_auth_password: Optional[str] = None
 
@@ -58,8 +59,29 @@ class Settings(BaseSettings):
     tz: str = "UTC"
 
     @property
-    def auth_enabled(self) -> bool:
+    def has_auth_credentials(self) -> bool:
         return bool(self.web_auth_user and self.web_auth_password)
+
+    @property
+    def auth_required(self) -> bool:
+        """Czy logowanie ma być wymagane.
+
+        Jawny ``WEB_AUTH_ENABLED`` ma pierwszeństwo; gdy nieustawiony — auth
+        włącza się automatycznie po podaniu loginu i hasła (zachowanie domyślne).
+        """
+        if self.web_auth_enabled is not None:
+            return self.web_auth_enabled
+        return self.has_auth_credentials
+
+    @property
+    def auth_enabled(self) -> bool:
+        """Czy logowanie jest faktycznie egzekwowane (wymaga też danych)."""
+        return self.auth_required and self.has_auth_credentials
+
+    @property
+    def auth_misconfigured(self) -> bool:
+        """Auth zażądany jawnie, ale bez kompletu login+hasło."""
+        return self.auth_required and not self.has_auth_credentials
 
     @property
     def settings_path(self) -> str:

@@ -50,7 +50,8 @@ docker compose --profile console up --build     # tryb konsolowy
 |---|---|---|
 | `MODE` | `web` | `web` (panel) lub `console` (demon) |
 | `WEB_PORT` | `8080` | port panelu WWW |
-| `WEB_AUTH_USER` / `WEB_AUTH_PASSWORD` | — | ustaw **oba**, aby włączyć Basic Auth w panelu |
+| `WEB_AUTH_ENABLED` | — | jawny włącznik logowania; gdy nieustawiony, auth włącza się automatycznie po podaniu loginu i hasła |
+| `WEB_AUTH_USER` / `WEB_AUTH_PASSWORD` | — | dane do Basic Auth (wymagane, gdy logowanie włączone) |
 | `CLEAN_SCOPE` | `dangling` | `dangling` (nieotagowane `<none>`) lub `all` (każdy obraz bez kontenera, jak `docker image prune -a`) |
 | `CLEAN_BUILD_CACHE` | `false` | czyść też build cache (`docker builder prune`) |
 | `MIN_AGE` | `168h` | usuwaj tylko obrazy **starsze** niż próg (chroni świeżo zbudowane); `0h` = bez progu |
