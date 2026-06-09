@@ -4,7 +4,21 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from app.docker_client import image_info, parse_created
+import docker
+import pytest
+
+from app.docker_client import DockerClient, DockerUnavailableError, image_info, parse_created
+
+
+def test_client_is_lazy_and_reports_unavailable(monkeypatch):
+    def boom(*_a, **_k):
+        raise docker.errors.DockerException("no socket")
+
+    monkeypatch.setattr(docker, "from_env", boom)
+    client = DockerClient()          # konstrukcja nie łączy się — nie rzuca
+    assert client.ping() is False    # ping łyka błąd
+    with pytest.raises(DockerUnavailableError):
+        _ = client.client            # dostęp do klienta daje czytelny błąd
 
 
 def test_parse_created_handles_nanoseconds_and_z():

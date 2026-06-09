@@ -55,11 +55,32 @@ def image_info(image) -> dict:
     }
 
 
+class DockerUnavailableError(RuntimeError):
+    """Demon Dockera jest nieosiągalny (najczęściej brak montażu socketu)."""
+
+
+_SOCKET_HINT = (
+    "Nie można połączyć się z demonem Dockera. Zamontuj socket w kontenerze: "
+    "-v /var/run/docker.sock:/var/run/docker.sock "
+    "(w Portainerze: Volumes → bind, host i kontener = /var/run/docker.sock)."
+)
+
+
 class DockerClient:
     """Operacje na obrazach potrzebne aplikacji."""
 
     def __init__(self, client=None):
-        self.client = client if client is not None else docker.from_env()
+        # Połączenie nawiązujemy leniwie — brak socketu nie wywala startu aplikacji.
+        self._client = client
+
+    @property
+    def client(self):
+        if self._client is None:
+            try:
+                self._client = docker.from_env()
+            except docker.errors.DockerException as exc:
+                raise DockerUnavailableError(_SOCKET_HINT) from exc
+        return self._client
 
     # -- odczyt ---------------------------------------------------------------
 
@@ -83,7 +104,10 @@ class DockerClient:
         return self.client.df()
 
     def ping(self) -> bool:
-        return bool(self.client.ping())
+        try:
+            return bool(self.client.ping())
+        except (DockerUnavailableError, docker.errors.DockerException, OSError):
+            return False
 
     # -- zapis ----------------------------------------------------------------
 

@@ -6,9 +6,25 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.config import RuntimeConfig, Settings
+from app.docker_client import DockerUnavailableError
 from app.web.app import create_app
 
 from .conftest import FakeDockerClient, make_image
+
+
+class UnavailableClient(FakeDockerClient):
+    def list_unused_images(self, scope="dangling"):
+        raise DockerUnavailableError("Brak /var/run/docker.sock")
+
+
+def test_api_images_returns_503_when_docker_unavailable(tmp_path):
+    settings = Settings(mode="web", data_dir=str(tmp_path))
+    runtime = RuntimeConfig.from_settings(settings)
+    app = create_app(settings, runtime, docker_client=UnavailableClient())
+    with TestClient(app) as client:
+        res = client.get("/api/images")
+    assert res.status_code == 503
+    assert "docker.sock" in res.json()["detail"]
 
 
 def build_client(tmp_path, settings_kwargs=None, images=None):

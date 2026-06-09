@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import logging
 import signal
+import sys
 import threading
 
 from .cleaner import run_cleanup
-from .docker_client import DockerClient
+from .docker_client import DockerClient, _SOCKET_HINT
 from .scheduler import CleanupScheduler
 
 logger = logging.getLogger("docker_cleaner.console")
@@ -15,6 +16,11 @@ logger = logging.getLogger("docker_cleaner.console")
 
 def run_console(settings, runtime, docker_client=None) -> None:
     client = docker_client if docker_client is not None else DockerClient()
+
+    # Szybka, czytelna diagnoza zamiast wielkiego tracebacku przy braku socketu.
+    if not client.ping():
+        logger.error(_SOCKET_HINT)
+        sys.exit(1)
 
     # W trybie konsolowym czyszczenie cykliczne jest sensem działania.
     runtime.auto_clean = True

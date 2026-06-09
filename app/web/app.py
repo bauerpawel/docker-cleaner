@@ -10,7 +10,7 @@ from typing import List, Literal, Optional
 
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request, status
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 
 from ..cleaner import run_cleanup
 from ..config import RuntimeConfig, save_runtime_config, validate_runtime
-from ..docker_client import DockerClient
+from ..docker_client import DockerClient, DockerUnavailableError
 from ..scheduler import CleanupScheduler
 
 logger = logging.getLogger("docker_cleaner.web")
@@ -97,6 +97,11 @@ def create_app(settings, runtime: RuntimeConfig, docker_client=None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
+        if not client.ping():
+            logger.warning(
+                "Docker niedostępny przy starcie — panel wystartuje, ale operacje "
+                "na obrazach będą zgłaszać błąd. Sprawdź montaż /var/run/docker.sock."
+            )
         scheduler.start(runtime)
         yield
         scheduler.shutdown()
@@ -106,6 +111,10 @@ def create_app(settings, runtime: RuntimeConfig, docker_client=None) -> FastAPI:
     app.state.runtime = runtime
     app.state.scheduler = scheduler
     app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+
+    @app.exception_handler(DockerUnavailableError)
+    async def _docker_unavailable(_request: Request, exc: DockerUnavailableError):
+        return JSONResponse(status_code=503, content={"detail": str(exc)})
 
     @app.get("/", response_class=HTMLResponse)
     def index(request: Request, _user=Depends(auth)):
