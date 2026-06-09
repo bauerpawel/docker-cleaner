@@ -41,6 +41,22 @@ body {
 .status { font-size: 13px; color: var(--muted); text-align: right; }
 .status strong { color: var(--text); }
 
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+.lang { display: flex; gap: 4px; }
+.lang-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.lang-btn:hover { color: var(--text); }
+.lang-btn.active { color: var(--text); border-color: var(--accent); }
+
 main {
   max-width: 1000px;
   margin: 24px auto;

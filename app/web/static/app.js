@@ -7,6 +7,134 @@ const state = {
   selected: new Set(),
 };
 
+// --- i18n ------------------------------------------------------------------
+
+const I18N = {
+  en: {
+    unused_images: "Unused images",
+    scope_label: "Scope:",
+    opt_dangling: "dangling (untagged)",
+    opt_all: "all unused",
+    refresh: "Refresh",
+    select_all_title: "Select all",
+    th_tags: "Tags",
+    th_id: "ID",
+    th_size: "Size",
+    th_age: "Age",
+    delete_selected: "Delete selected",
+    auto_cleanup_title: "Automatic cleanup",
+    enable_auto_clean: "Enable automatic cleanup",
+    clean_scope_label: "Cleanup scope",
+    schedule_type_label: "Schedule type",
+    opt_interval: "interval",
+    opt_cron: "cron",
+    interval_label: "Interval (e.g. 24h, 30m, 7d)",
+    cron_label: "Cron expression (e.g. 0 3 * * *)",
+    min_age_label: "Age threshold (only older than)",
+    clean_build_cache_label: "Also prune build cache",
+    save_settings: "Save settings",
+    loading: "Loading…",
+    empty_images: "No unused images 🎉",
+    selected: "Selected: {n}",
+    delete_confirm: "Delete {n} image(s)? This cannot be undone.",
+    deleted_ok: "Removed {n} image(s).",
+    deleted_partial: "Removed {removed}, errors: {errors}. Some images may be in use.",
+    delete_error: "Delete error: {msg}",
+    load_error: "Error: {msg}",
+    settings_load_error: "Failed to load settings: {msg}",
+    settings_saved_next: "Saved. Next cleanup: {time}",
+    settings_saved_off: "Saved. Automatic cleanup disabled.",
+    settings_saved_toast: "Settings saved.",
+    save_error: "Save error: {msg}",
+    status_reclaimable: "Reclaimable: {size}",
+    status_next: "Next cleanup: {time}",
+    status_auto_off: "Auto-cleanup: disabled",
+    err_status: "Error {status}",
+  },
+  pl: {
+    unused_images: "Nieużywane obrazy",
+    scope_label: "Zakres:",
+    opt_dangling: "dangling (nieotagowane)",
+    opt_all: "wszystkie nieużywane",
+    refresh: "Odśwież",
+    select_all_title: "Zaznacz wszystko",
+    th_tags: "Tagi",
+    th_id: "ID",
+    th_size: "Rozmiar",
+    th_age: "Wiek",
+    delete_selected: "Usuń zaznaczone",
+    auto_cleanup_title: "Automatyczne czyszczenie",
+    enable_auto_clean: "Włącz automatyczne czyszczenie",
+    clean_scope_label: "Zakres czyszczenia",
+    schedule_type_label: "Typ harmonogramu",
+    opt_interval: "interwał",
+    opt_cron: "cron",
+    interval_label: "Interwał (np. 24h, 30m, 7d)",
+    cron_label: "Wyrażenie cron (np. 0 3 * * *)",
+    min_age_label: "Próg wieku (usuwaj starsze niż)",
+    clean_build_cache_label: "Czyść też build cache",
+    save_settings: "Zapisz ustawienia",
+    loading: "Ładowanie…",
+    empty_images: "Brak nieużywanych obrazów 🎉",
+    selected: "Zaznaczono: {n}",
+    delete_confirm: "Usunąć {n} obraz(ów)? Tej operacji nie można cofnąć.",
+    deleted_ok: "Usunięto {n} obraz(ów).",
+    deleted_partial: "Usunięto {removed}, błędów: {errors}. Niektóre obrazy mogą być używane.",
+    delete_error: "Błąd usuwania: {msg}",
+    load_error: "Błąd: {msg}",
+    settings_load_error: "Nie udało się wczytać ustawień: {msg}",
+    settings_saved_next: "Zapisano. Następne czyszczenie: {time}",
+    settings_saved_off: "Zapisano. Automatyczne czyszczenie wyłączone.",
+    settings_saved_toast: "Ustawienia zapisane.",
+    save_error: "Błąd zapisu: {msg}",
+    status_reclaimable: "Do odzyskania: {size}",
+    status_next: "Następne czyszczenie: {time}",
+    status_auto_off: "Auto-czyszczenie: wyłączone",
+    err_status: "Błąd {status}",
+  },
+};
+
+function detectLang() {
+  const stored = localStorage.getItem("lang");
+  if (stored === "en" || stored === "pl") return stored;
+  const nav = (navigator.language || "en").toLowerCase();
+  return nav.startsWith("pl") ? "pl" : "en";
+}
+
+let lang = detectLang();
+
+function t(key, vars) {
+  let s = (I18N[lang] && I18N[lang][key]) || (I18N.en[key] || key);
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) s = s.replaceAll(`{${k}}`, v);
+  }
+  return s;
+}
+
+function applyI18n() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll("[data-i18n-title]").forEach((el) => {
+    el.title = t(el.dataset.i18nTitle);
+  });
+  document.querySelectorAll(".lang-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.lang === lang);
+  });
+}
+
+function setLang(next) {
+  if (next === lang) return;
+  lang = next;
+  localStorage.setItem("lang", lang);
+  applyI18n();
+  // Odśwież elementy generowane dynamicznie w bieżącym języku.
+  renderImages();
+  loadStatus();
+  $("#settings-msg").textContent = "";
+}
+
 // --- helpers ---------------------------------------------------------------
 
 function formatBytes(bytes) {
@@ -44,7 +172,7 @@ async function api(method, url, body) {
   const res = await fetch(url, opts);
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.detail || `Błąd ${res.status}`);
+    throw new Error(data.detail || t("err_status", { status: res.status }));
   }
   return data;
 }
@@ -55,7 +183,7 @@ function renderImages() {
   const body = $("#images-body");
   body.innerHTML = "";
   if (state.images.length === 0) {
-    body.innerHTML = '<tr><td colspan="5" class="empty">Brak nieużywanych obrazów 🎉</td></tr>';
+    body.innerHTML = `<tr><td colspan="5" class="empty">${escapeHtml(t("empty_images"))}</td></tr>`;
     updateSelectionInfo();
     return;
   }
@@ -90,7 +218,7 @@ function updateSelectionInfo() {
   const present = new Set(state.images.map((i) => i.id));
   state.selected = new Set([...state.selected].filter((id) => present.has(id)));
   const count = state.selected.size;
-  $("#selection-info").textContent = `Zaznaczono: ${count}`;
+  $("#selection-info").textContent = t("selected", { n: count });
   $("#delete-selected").disabled = count === 0;
   const all = $("#select-all");
   all.checked = count > 0 && count === state.images.length;
@@ -104,34 +232,34 @@ function escapeHtml(s) {
 
 async function loadImages() {
   const scope = $("#scope").value;
-  $("#images-body").innerHTML = '<tr><td colspan="5" class="empty">Ładowanie…</td></tr>';
+  $("#images-body").innerHTML = `<tr><td colspan="5" class="empty">${escapeHtml(t("loading"))}</td></tr>`;
   try {
     const data = await api("GET", `/api/images?scope=${scope}`);
     state.images = data.images || [];
     renderImages();
   } catch (e) {
-    $("#images-body").innerHTML = `<tr><td colspan="5" class="empty">Błąd: ${escapeHtml(e.message)}</td></tr>`;
+    $("#images-body").innerHTML = `<tr><td colspan="5" class="empty">${escapeHtml(t("load_error", { msg: e.message }))}</td></tr>`;
   }
 }
 
 async function deleteSelected() {
   const ids = [...state.selected];
   if (ids.length === 0) return;
-  if (!confirm(`Usunąć ${ids.length} obraz(ów)? Tej operacji nie można cofnąć.`)) return;
+  if (!confirm(t("delete_confirm", { n: ids.length }))) return;
   try {
     const data = await api("POST", "/api/images/delete", { ids });
     const removed = (data.removed || []).length;
     const errors = (data.errors || []).length;
     if (errors > 0) {
-      toast(`Usunięto ${removed}, błędów: ${errors}. Niektóre obrazy mogą być używane.`, "err");
+      toast(t("deleted_partial", { removed, errors }), "err");
     } else {
-      toast(`Usunięto ${removed} obraz(ów).`, "ok");
+      toast(t("deleted_ok", { n: removed }), "ok");
     }
     state.selected.clear();
     await loadImages();
     await loadStatus();
   } catch (e) {
-    toast(`Błąd usuwania: ${e.message}`, "err");
+    toast(t("delete_error", { msg: e.message }), "err");
   }
 }
 
@@ -155,7 +283,7 @@ async function loadSettings() {
     $("#schedule-type").value = s.clean_cron ? "cron" : "interval";
     toggleScheduleFields();
   } catch (e) {
-    toast(`Nie udało się wczytać ustawień: ${e.message}`, "err");
+    toast(t("settings_load_error", { msg: e.message }), "err");
   }
 }
 
@@ -173,12 +301,12 @@ async function saveSettings(ev) {
   try {
     const data = await api("PUT", "/api/settings", payload);
     $("#settings-msg").textContent = data.next_run
-      ? `Zapisano. Następne czyszczenie: ${new Date(data.next_run).toLocaleString()}`
-      : "Zapisano. Automatyczne czyszczenie wyłączone.";
-    toast("Ustawienia zapisane.", "ok");
+      ? t("settings_saved_next", { time: new Date(data.next_run).toLocaleString() })
+      : t("settings_saved_off");
+    toast(t("settings_saved_toast"), "ok");
     await loadStatus();
   } catch (e) {
-    toast(`Błąd zapisu: ${e.message}`, "err");
+    toast(t("save_error", { msg: e.message }), "err");
   }
 }
 
@@ -189,12 +317,12 @@ async function loadStatus() {
     const s = await api("GET", "/api/status");
     const parts = [];
     if (s.disk && s.disk.images_reclaimable_bytes != null) {
-      parts.push(`Do odzyskania: <strong>${formatBytes(s.disk.images_reclaimable_bytes)}</strong>`);
+      parts.push(t("status_reclaimable", { size: `<strong>${formatBytes(s.disk.images_reclaimable_bytes)}</strong>` }));
     }
     if (s.auto_clean && s.next_run) {
-      parts.push(`Następne czyszczenie: <strong>${new Date(s.next_run).toLocaleString()}</strong>`);
+      parts.push(t("status_next", { time: `<strong>${new Date(s.next_run).toLocaleString()}</strong>` }));
     } else {
-      parts.push("Auto-czyszczenie: <strong>wyłączone</strong>");
+      parts.push(t("status_auto_off"));
     }
     $("#status").innerHTML = parts.join(" &nbsp;•&nbsp; ");
   } catch (e) {
@@ -205,6 +333,8 @@ async function loadStatus() {
 // --- init ------------------------------------------------------------------
 
 function init() {
+  applyI18n();
+
   $("#refresh").addEventListener("click", loadImages);
   $("#scope").addEventListener("change", loadImages);
   $("#delete-selected").addEventListener("click", deleteSelected);
@@ -215,7 +345,11 @@ function init() {
   });
   $("#schedule-type").addEventListener("change", toggleScheduleFields);
   $("#settings-form").addEventListener("submit", saveSettings);
+  document.querySelectorAll(".lang-btn").forEach((b) => {
+    b.addEventListener("click", () => setLang(b.dataset.lang));
+  });
 
+  updateSelectionInfo();
   loadImages();
   loadSettings();
   loadStatus();

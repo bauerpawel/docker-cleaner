@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,22 +12,28 @@
       <span class="logo">🧹</span>
       <h1>Docker Cleaner</h1>
     </div>
-    <div id="status" class="status"></div>
+    <div class="topbar-right">
+      <div id="status" class="status"></div>
+      <div class="lang" id="lang-switch">
+        <button type="button" class="lang-btn" data-lang="en">EN</button>
+        <button type="button" class="lang-btn" data-lang="pl">PL</button>
+      </div>
+    </div>
   </header>
 
   <main>
     <section class="card">
       <div class="card-head">
-        <h2>Nieużywane obrazy</h2>
+        <h2 data-i18n="unused_images">Unused images</h2>
         <div class="controls">
           <label class="scope">
-            Zakres:
+            <span data-i18n="scope_label">Scope:</span>
             <select id="scope">
-              <option value="dangling">dangling (nieotagowane)</option>
-              <option value="all">wszystkie nieużywane</option>
+              <option value="dangling" data-i18n="opt_dangling">dangling (untagged)</option>
+              <option value="all" data-i18n="opt_all">all unused</option>
             </select>
           </label>
-          <button id="refresh" class="btn">Odśwież</button>
+          <button id="refresh" class="btn" data-i18n="refresh">Refresh</button>
         </div>
       </div>
 
@@ -35,69 +41,69 @@
         <table id="images-table">
           <thead>
             <tr>
-              <th class="col-check"><input type="checkbox" id="select-all" title="Zaznacz wszystko"></th>
-              <th>Tagi</th>
-              <th>ID</th>
-              <th class="num">Rozmiar</th>
-              <th class="num">Wiek</th>
+              <th class="col-check"><input type="checkbox" id="select-all" data-i18n-title="select_all_title" title="Select all"></th>
+              <th data-i18n="th_tags">Tags</th>
+              <th data-i18n="th_id">ID</th>
+              <th class="num" data-i18n="th_size">Size</th>
+              <th class="num" data-i18n="th_age">Age</th>
             </tr>
           </thead>
           <tbody id="images-body">
-            <tr><td colspan="5" class="empty">Ładowanie…</td></tr>
+            <tr><td colspan="5" class="empty" data-i18n="loading">Loading…</td></tr>
           </tbody>
         </table>
       </div>
 
       <div class="card-foot">
-        <span id="selection-info" class="muted">Zaznaczono: 0</span>
-        <button id="delete-selected" class="btn danger" disabled>Usuń zaznaczone</button>
+        <span id="selection-info" class="muted"></span>
+        <button id="delete-selected" class="btn danger" disabled data-i18n="delete_selected">Delete selected</button>
       </div>
     </section>
 
     <section class="card">
-      <div class="card-head"><h2>Automatyczne czyszczenie</h2></div>
+      <div class="card-head"><h2 data-i18n="auto_cleanup_title">Automatic cleanup</h2></div>
       <form id="settings-form" class="settings">
         <label class="switch-row">
           <input type="checkbox" id="auto_clean">
-          <span>Włącz automatyczne czyszczenie</span>
+          <span data-i18n="enable_auto_clean">Enable automatic cleanup</span>
         </label>
 
         <div class="grid">
-          <label>Zakres czyszczenia
+          <label><span data-i18n="clean_scope_label">Cleanup scope</span>
             <select id="set-scope">
-              <option value="dangling">dangling (nieotagowane)</option>
-              <option value="all">wszystkie nieużywane</option>
+              <option value="dangling" data-i18n="opt_dangling">dangling (untagged)</option>
+              <option value="all" data-i18n="opt_all">all unused</option>
             </select>
           </label>
 
-          <label>Typ harmonogramu
+          <label><span data-i18n="schedule_type_label">Schedule type</span>
             <select id="schedule-type">
-              <option value="interval">interwał</option>
-              <option value="cron">cron</option>
+              <option value="interval" data-i18n="opt_interval">interval</option>
+              <option value="cron" data-i18n="opt_cron">cron</option>
             </select>
           </label>
 
-          <label id="interval-field">Interwał (np. 24h, 30m, 7d)
+          <label id="interval-field"><span data-i18n="interval_label">Interval (e.g. 24h, 30m, 7d)</span>
             <input type="text" id="clean_interval" placeholder="24h">
           </label>
 
-          <label id="cron-field" class="hidden">Wyrażenie cron (np. 0 3 * * *)
+          <label id="cron-field" class="hidden"><span data-i18n="cron_label">Cron expression (e.g. 0 3 * * *)</span>
             <input type="text" id="clean_cron" placeholder="0 3 * * *">
           </label>
 
-          <label>Próg wieku (usuwaj starsze niż)
+          <label><span data-i18n="min_age_label">Age threshold (only older than)</span>
             <input type="text" id="min_age" placeholder="168h">
           </label>
 
           <label class="switch-row inline">
             <input type="checkbox" id="clean_build_cache">
-            <span>Czyść też build cache</span>
+            <span data-i18n="clean_build_cache_label">Also prune build cache</span>
           </label>
         </div>
 
         <div class="card-foot">
           <span id="settings-msg" class="muted"></span>
-          <button type="submit" class="btn primary">Zapisz ustawienia</button>
+          <button type="submit" class="btn primary" data-i18n="save_settings">Save settings</button>
         </div>
       </form>
     </section>
