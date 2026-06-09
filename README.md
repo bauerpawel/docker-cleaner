@@ -7,7 +7,66 @@ A Docker utility image that removes **unused Docker images**. It runs in two mod
 - **`web`** — a web panel listing unused images, with manual select/delete and configuration of scheduled automatic cleanup.
 - **`console`** — no panel; a daemon that periodically cleans images on an interval or cron schedule.
 
-## Quick start
+## Run from Docker Hub
+
+The image is published at [`pbauer/docker-cleaner`](https://hub.docker.com/r/pbauer/docker-cleaner) (multi-arch: `linux/amd64` + `linux/arm64`) — pull and run it directly, no build needed.
+
+### Web panel
+
+```bash
+docker run -d --name docker-cleaner \
+  -p 8080:8080 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v "$(pwd)/data:/data" \
+  pbauer/docker-cleaner:latest
+```
+
+Open <http://localhost:8080> and set the schedule and what to clean from the panel — or preset them with the environment variables below.
+
+### Console mode (scheduled, no panel)
+
+```bash
+docker run -d --name docker-cleaner \
+  -e MODE=console \
+  -e CLEAN_INTERVAL=24h \
+  -e CLEAN_SCOPE=all \
+  -e MIN_AGE=168h \
+  -e CLEAN_BUILD_CACHE=true \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  pbauer/docker-cleaner:latest
+```
+
+### Portainer / docker compose stack
+
+```yaml
+services:
+  docker-cleaner:
+    image: pbauer/docker-cleaner:latest
+    environment:
+      MODE: web
+      AUTO_CLEAN: "true"           # run the schedule in web mode too
+      # --- cleaning time (schedule) ---
+      CLEAN_INTERVAL: 24h          # every 24h, 30m, 7d, 90s …
+      # CLEAN_CRON: "0 3 * * *"    # …or a cron expression (takes precedence)
+      # --- what to clean ---
+      CLEAN_SCOPE: all             # dangling | all
+      CLEAN_BUILD_CACHE: "true"    # also prune build cache
+      MIN_AGE: 168h                # only images older than this
+    ports:
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/docker-cleaner/data:/data
+    restart: unless-stopped
+```
+
+**Cleaning time (schedule):** `CLEAN_INTERVAL` runs cleanup every N time (`30m`, `24h`, `7d`, `90s`). For a fixed time of day use `CLEAN_CRON` (e.g. `0 3 * * *` = daily at 03:00) — it takes precedence over the interval. Set `TZ` (e.g. `Europe/Warsaw`) for cron. In `web` mode the schedule runs only when `AUTO_CLEAN=true` (or after you enable it in the panel); in `console` mode it is always on.
+
+**What to clean:** `CLEAN_SCOPE` selects `dangling` (untagged leftovers) or `all` (every image not used by any container). `CLEAN_BUILD_CACHE=true` additionally prunes the build cache. `MIN_AGE` protects fresh images — only ones older than the threshold are removed (`0h` disables the guard).
+
+> **Windows / Docker Desktop (Linux containers):** pass the socket as `-v //var/run/docker.sock:/var/run/docker.sock` (double slash) and use `${PWD}` instead of `$(pwd)` in PowerShell.
+
+## Build it yourself
 
 ### Web panel
 
