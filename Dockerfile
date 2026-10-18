@@ -15,9 +15,10 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-# Aktualne pip/setuptools/wheel (usuwa CVE w samym pip) + zależności aplikacji.
-RUN python -m pip install --no-cache-dir --upgrade pip setuptools wheel \
-    && pip install --no-cache-dir -r requirements.txt
+# Zależności aplikacji, potem usunięcie pip: w działającym obrazie nie jest
+# potrzebny, więc odpada razem ze swoimi ewentualnymi CVE.
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip uninstall -y pip
 
 COPY app ./app
 
