@@ -1,0 +1,24 @@
+name: Docker Hub description
+
+# Synchronizuje opis repozytorium na Docker Hub z plikiem DOCKERHUB.md.
+on:
+  push:
+    branches: [main]
+    paths: ["DOCKERHUB.md", ".github/workflows/dockerhub-description.yml"]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Token Docker Hub musi mieć uprawnienia Read, Write, Delete.
+      # Akcja zewnętrzna dostaje token, więc jest przypięta do commita (v5.0.0).
+      - name: Update Docker Hub description
+        uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKER_PAT }}
+          repository: pbauer/docker-cleaner
+          readme-filepath: ./DOCKERHUB.md

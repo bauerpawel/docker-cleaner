@@ -14,6 +14,16 @@ The web panel is bilingual (English / Polish, switcher in the top‑right corner
 
 **Architectures:** `linux/amd64`, `linux/arm64`
 
+Images are rebuilt on the 1st and 15th of every month to pick up security patches of the base image (Debian, Python).
+
+## What's new in 1.0.0
+
+- **Security:** fixed CVE-2026-54283 and CVE-2026-54282 (Starlette) and CVE-2026-58203 (pydantic-settings); no known vulnerabilities in the Python dependency tree; `pip` removed from the runtime image.
+- **Smaller image:** unused uvicorn extras (uvloop, httptools, watchfiles, websockets, PyYAML) are no longer installed.
+- **Updated dependencies:** FastAPI 0.143, Starlette 1.8, Uvicorn 0.54, Pydantic 2.14, Docker SDK 7.2.
+
+Full changelog: **https://github.com/bauerpawel/docker-cleaner/releases**
+
 ## Quick start
 
 ### Web panel
