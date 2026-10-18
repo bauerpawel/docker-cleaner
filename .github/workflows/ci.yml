@@ -7,14 +7,18 @@ on:
     paths-ignore: ["**.md", "LICENSE", "docker-compose*.yml"]
   pull_request:
     branches: [main]
+  schedule:
+    # Przebudowa obrazu co ~2 tygodnie (1. i 15. dnia miesiąca): świeże łatki
+    # obrazu bazowego (Debian, Python). Cron GitHuba nie obsługuje "co 14 dni".
+    - cron: "0 4 1,15 * *"
   workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.14"
       - run: pip install -r requirements-dev.txt
@@ -25,7 +29,7 @@ jobs:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
@@ -33,13 +37,35 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKER_PAT }}
 
-      # Używa zdalnego buildera Docker Build Cloud zamiast lokalnego/QEMU.
-      - name: Set up Docker Build Cloud
+      # arm64 budowany przez emulację QEMU na zwykłym runnerze GitHuba.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
+
+      # Test dymny: obraz musi wystartować, połączyć się z Dockerem przez socket
+      # i serwować panel, zanim cokolwiek trafi do Docker Hub.
+      - name: Build image for smoke test
+        uses: docker/build-push-action@v7
         with:
-          version: "lab:latest"
-          driver: cloud
-          endpoint: "pbauer/docker-cleaner"
+          context: .
+          platforms: linux/amd64
+          load: true
+          tags: docker-cleaner:smoke
+
+      - name: Smoke test
+        run: |
+          docker run -d --name smoke -p 8080:8080 \
+            -v /var/run/docker.sock:/var/run/docker.sock docker-cleaner:smoke
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8080/healthz | grep -q '"docker":true'; then
+              curl -fsS -o /dev/null http://127.0.0.1:8080/ && exit 0
+            fi
+            sleep 1
+          done
+          docker logs smoke
+          exit 1
 
       - name: Generate image metadata
         id: meta
