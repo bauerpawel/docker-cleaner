@@ -17,6 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
+from .. import __version__
 from ..cleaner import run_cleanup
 from ..config import RuntimeConfig, save_runtime_config, validate_runtime
 from ..docker_client import DockerClient, DockerUnavailableError
@@ -107,7 +108,7 @@ def create_app(settings, runtime: RuntimeConfig, docker_client=None) -> FastAPI:
         yield
         scheduler.shutdown()
 
-    app = FastAPI(title="Docker Cleaner", version="1.0.0", lifespan=lifespan)
+    app = FastAPI(title="Docker Cleaner", version=__version__, lifespan=lifespan)
     app.state.settings = settings
     app.state.runtime = runtime
     app.state.scheduler = scheduler

@@ -10,11 +10,17 @@ The web panel is bilingual (English / Polish, switcher in the top‑right corner
 ## Supported tags
 
 - `latest` — latest build from the `main` branch
-- `x.y.z` — released versions (e.g. `1.0.0`)
+- `x.y.z` — released versions (e.g. `1.0.1`)
 
 **Architectures:** `linux/amd64`, `linux/arm64`
 
 Images are rebuilt on the 1st and 15th of every month to pick up security patches of the base image (Debian, Python).
+
+## What's new in 1.0.1
+
+- **Updated dependencies:** FastAPI 0.162, Starlette 1.10, Pydantic 2.14.2, pydantic-settings 2.16.2, tzdata 2026.6; Python 3.14.10 in the base image (CPython security fixes since 1.0.0).
+- **Smaller attack surface:** `python-multipart` is no longer installed — the panel accepts JSON only.
+- **Security:** no known vulnerabilities in the Python dependency tree (`pip-audit`).
 
 ## What's new in 1.0.0
 
