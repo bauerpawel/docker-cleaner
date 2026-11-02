@@ -12,8 +12,9 @@ i kontynuowania ich w kolejnych sesjach. Nowe sesje dopisujemy na końcu pliku.
 - CI (`.github/workflows/ci.yml`): testy → build → test dymny → push; automatyczna
   przebudowa 1. i 15. dnia miesiąca.
 - Ostatni audyt CVE: 2026-11-02 — brak znanych podatności w zależnościach Pythona.
-- Obecny `latest`/`main` na Docker Hub: build z 2026-11-02 (`sha256:eeb6bbcad4b2`)
-  z zaktualizowanymi zależnościami; ostatnie wydanie z wersją: `1.0.0` (2026-10-18).
+- Obecny `latest`/`main` na Docker Hub: wersja 1.0.1 (`sha256:e4e25821807d`, 2026-11-02).
+  Ostatni opublikowany tag wersji to `1.0.0`; `v1.0.1` czeka na opublikowanie release'u
+  przez właściciela (patrz „Wydanie 1.0.1” niżej).
 
 ## Wcześniejsze prace (odtworzone z historii git, bez zapisu rozmów)
 
@@ -90,7 +91,8 @@ i kontynuowania ich w kolejnych sesjach. Nowe sesje dopisujemy na końcu pliku.
 ### Do zrobienia / propozycje
 
 - ~~Scalić `claude/vigilant-mendel-qpilsl` do `main`.~~ Zrobione, patrz niżej.
-- Opcjonalnie wydać 1.0.1 (tag `v1.0.1`) z sekcją „What's new” w `DOCKERHUB.md`.
+- ~~Opcjonalnie wydać 1.0.1 (tag `v1.0.1`) z sekcją „What's new” w `DOCKERHUB.md`.~~
+  Zrobione poza samym tagiem, patrz „Wydanie 1.0.1”.
 - Python 3.15 jest już dostępny (`python:3.15-slim`, 3.15.2). Wersja 3.14 jest nadal
   wspierana, więc przejście jest opcjonalne.
 
@@ -105,3 +107,41 @@ i kontynuowania ich w kolejnych sesjach. Nowe sesje dopisujemy na końcu pliku.
   2026-11-02 09:44 UTC). Tag `1.0.0` bez zmian.
 - Ten wpis trafił na `main` osobnym commitem tylko z dokumentacją; CI pomija zmiany
   w plikach `.md`, więc nie było ponownej przebudowy.
+
+### Wydanie 1.0.1
+
+- **Prośba:** „zrób to” (wydanie 1.0.1: tag `v1.0.1` i sekcja „What's new” w `DOCKERHUB.md`).
+- Commit `fd8d4b0` „Release 1.0.1”: wersja 1.0.1 w `app/__init__.py`. FastAPI bierze teraz
+  wersję z `app.__version__`, więc przy kolejnym wydaniu zmienia się ją w jednym miejscu.
+  W `DOCKERHUB.md` doszła sekcja „What's new in 1.0.1”.
+- `main` przesunięty metodą fast-forward na `fd8d4b0`. CI #17 zakończone sukcesem;
+  `latest` i `main` na Docker Hub to `sha256:e4e25821807d` (1.0.1, Python 3.14.10,
+  amd64 52,9 MB). Workflow „Docker Hub description” zsynchronizował opis repozytorium.
+- **Tag `v1.0.1` nie został wypchnięty:** proxy git tej sesji odrzuca push tagów (HTTP 403),
+  a narzędzia GitHub dostępne w sesji nie tworzą release'ów.
+- **Do zrobienia przez właściciela:** opublikować release przez formularz GitHuba
+  z wypełnionymi polami (link w czacie; ręcznie:
+  <https://github.com/bauerpawel/docker-cleaner/releases/new?tag=v1.0.1&target=main>,
+  tytuł „Docker Cleaner 1.0.1”, notatki poniżej). GitHub utworzy tag `v1.0.1` na bieżącym
+  `main` (względem `fd8d4b0` różni się tylko tym plikiem), a CI zbuduje i opublikuje
+  obraz `pbauer/docker-cleaner:1.0.1`.
+
+<details>
+<summary>Notatki do wydania v1.0.1 (treść GitHub Release)</summary>
+
+Maintenance release. Docker image: `pbauer/docker-cleaner:1.0.1` (also `latest`), `linux/amd64` + `linux/arm64`.
+
+## 🔒 Security
+
+- No known vulnerabilities in the full Python dependency tree (`pip-audit`, 2026-11-02). This release fixes no CVEs in Python packages; it brings updates and hardening.
+- **Python 3.14.8 → 3.14.10** in the base image, with CPython security fixes: bundled libexpat 2.9.0, stricter `tarfile` extraction filters for link members, a race in `tempfile.TemporaryDirectory` cleanup that could delete files outside the directory, `http.cookiejar` domain checks for cookies with a negative `Version`, and `ssl` rejecting certificate chains with compromised eMudhra intermediate CA keys.
+- **Starlette** 1.8.0 → 1.10.0 — hardening: `?`, `#`, `\` and a leading `//` are percent-encoded when building `request.url`; host names are matched case-insensitively in `Host` routing and `TrustedHostMiddleware`; `FileResponse` ignores `Range` on methods other than `GET`/`HEAD`.
+- **`python-multipart` removed** — the panel accepts JSON only, and FastAPI needs this package only for form and file parameters. One package fewer to receive (and be flagged for) CVEs; it had six advisories in 2026.
+
+## ⬆️ Dependency updates
+
+FastAPI 0.143.3 → 0.162.0, Starlette 1.8.0 → 1.10.0, Pydantic 2.14.1 → 2.14.2, pydantic-settings 2.16.0 → 2.16.2, tzdata 2026.5 → 2026.6. Test dependencies: pytest 9.2.0, httpx2 2.16.0. FastAPI's breaking changes in this range affect form, file and `Body` parameters, which the panel doesn't use.
+
+No configuration changes — existing `docker run` / compose setups work as before.
+
+</details>
