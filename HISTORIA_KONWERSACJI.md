@@ -12,6 +12,8 @@ i kontynuowania ich w kolejnych sesjach. Nowe sesje dopisujemy na końcu pliku.
 - CI (`.github/workflows/ci.yml`): testy → build → test dymny → push; automatyczna
   przebudowa 1. i 15. dnia miesiąca.
 - Ostatni audyt CVE: 2026-11-02 — brak znanych podatności w zależnościach Pythona.
+- Obecny `latest`/`main` na Docker Hub: build z 2026-11-02 (`sha256:eeb6bbcad4b2`)
+  z zaktualizowanymi zależnościami; ostatnie wydanie z wersją: `1.0.0` (2026-10-18).
 
 ## Wcześniejsze prace (odtworzone z historii git, bez zapisu rozmów)
 
@@ -87,7 +89,19 @@ i kontynuowania ich w kolejnych sesjach. Nowe sesje dopisujemy na końcu pliku.
 
 ### Do zrobienia / propozycje
 
-- Scalić `claude/vigilant-mendel-qpilsl` do `main`. CI przetestuje, zbuduje i opublikuje `latest`.
+- ~~Scalić `claude/vigilant-mendel-qpilsl` do `main`.~~ Zrobione, patrz niżej.
 - Opcjonalnie wydać 1.0.1 (tag `v1.0.1`) z sekcją „What's new” w `DOCKERHUB.md`.
 - Python 3.15 jest już dostępny (`python:3.15-slim`, 3.15.2). Wersja 3.14 jest nadal
   wspierana, więc przejście jest opcjonalne.
+
+### Scalenie do `main`
+
+- **Prośba:** „scal”.
+- `main` przesunięty metodą fast-forward z `532fd3b` na `b560f1e` (bez commita
+  scalającego i bez pull requesta; `main` nie miał nowych commitów).
+- CI #16 (push na `main`) zakończone sukcesem: testy, build obrazu, test dymny
+  (`/healthz` z `docker: true` i panel) oraz publikacja na Docker Hub.
+- Tagi `latest` i `main` wskazują na `sha256:eeb6bbcad4b2` (amd64 + arm64,
+  2026-11-02 09:44 UTC). Tag `1.0.0` bez zmian.
+- Ten wpis trafił na `main` osobnym commitem tylko z dokumentacją; CI pomija zmiany
+  w plikach `.md`, więc nie było ponownej przebudowy.
