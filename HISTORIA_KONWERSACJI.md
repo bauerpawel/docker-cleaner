@@ -12,9 +12,8 @@ i kontynuowania ich w kolejnych sesjach. Nowe sesje dopisujemy na końcu pliku.
 - CI (`.github/workflows/ci.yml`): testy → build → test dymny → push; automatyczna
   przebudowa 1. i 15. dnia miesiąca.
 - Ostatni audyt CVE: 2026-11-02 — brak znanych podatności w zależnościach Pythona.
-- Obecny `latest`/`main` na Docker Hub: wersja 1.0.1 (`sha256:e4e25821807d`, 2026-11-02).
-  Ostatni opublikowany tag wersji to `1.0.0`; `v1.0.1` czeka na opublikowanie release'u
-  przez właściciela (patrz „Wydanie 1.0.1” niżej).
+- Ostatnie wydanie: **1.0.1** (2026-11-02): GitHub Release i tag `v1.0.1` (→ `3b6e6d0`),
+  obraz `pbauer/docker-cleaner:1.0.1` = `latest` (`sha256:521aefcbf273`, Python 3.14.10).
 
 ## Wcześniejsze prace (odtworzone z historii git, bez zapisu rozmów)
 
@@ -117,17 +116,22 @@ i kontynuowania ich w kolejnych sesjach. Nowe sesje dopisujemy na końcu pliku.
 - `main` przesunięty metodą fast-forward na `fd8d4b0`. CI #17 zakończone sukcesem;
   `latest` i `main` na Docker Hub to `sha256:e4e25821807d` (1.0.1, Python 3.14.10,
   amd64 52,9 MB). Workflow „Docker Hub description” zsynchronizował opis repozytorium.
-- **Tag `v1.0.1` nie został wypchnięty:** proxy git tej sesji odrzuca push tagów (HTTP 403),
-  a narzędzia GitHub dostępne w sesji nie tworzą release'ów.
-- **Do zrobienia przez właściciela:** opublikować release przez formularz GitHuba
-  z wypełnionymi polami (link w czacie; ręcznie:
-  <https://github.com/bauerpawel/docker-cleaner/releases/new?tag=v1.0.1&target=main>,
-  tytuł „Docker Cleaner 1.0.1”, notatki poniżej). GitHub utworzy tag `v1.0.1` na bieżącym
-  `main` (względem `fd8d4b0` różni się tylko tym plikiem), a CI zbuduje i opublikuje
-  obraz `pbauer/docker-cleaner:1.0.1`.
+- Tagu `v1.0.1` nie dało się wypchnąć z sesji: proxy git odrzuca push tagów (HTTP 403),
+  a narzędzia GitHub w sesji nie tworzą release'ów. Przygotowany został link do formularza
+  GitHub Release z wypełnionym tytułem, tagiem (`target=main`) i notatkami.
+- **Prośba:** „zatwierdzony formularz”. Właściciel opublikował release
+  (<https://github.com/bauerpawel/docker-cleaner/releases/tag/v1.0.1>, 2026-11-02 12:15 UTC).
+  GitHub utworzył lekki (nieadnotowany) tag `v1.0.1` na `3b6e6d0`, który od `fd8d4b0`
+  różni się tylko tym plikiem.
+- CI #18 (push tagu) zakończone sukcesem: testy, test dymny i publikacja. Na Docker Hub
+  `1.0.1` i `latest` to `sha256:521aefcbf273` (amd64 52,9 MB, arm64 53,0 MB, Python 3.14.10).
+  Przy tagu semver `docker/metadata-action` ustawia też `latest` (domyślne `latest=auto`);
+  `main` zostaje na buildzie z `fd8d4b0` (`sha256:e4e25821807d`).
+- Na przyszłość: w sesjach w chmurze push tagów jest blokowany, więc wydanie kończy
+  właściciel — formularzem z wypełnionymi polami albo lokalnym `git push` tagu.
 
 <details>
-<summary>Notatki do wydania v1.0.1 (treść GitHub Release)</summary>
+<summary>Notatki do wydania v1.0.1 (opublikowane w GitHub Release)</summary>
 
 Maintenance release. Docker image: `pbauer/docker-cleaner:1.0.1` (also `latest`), `linux/amd64` + `linux/arm64`.
 
