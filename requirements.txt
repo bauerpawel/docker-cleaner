@@ -4,7 +4,7 @@ uvicorn==0.54.0
 docker==7.2.0
 APScheduler==3.11.3
 croniter==6.2.4
-pydantic==2.14.2
+pydantic==2.14.3
 pydantic-settings==2.16.2
 jinja2==3.1.6
 tzdata==2026.6
